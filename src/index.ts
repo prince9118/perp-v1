@@ -1,11 +1,20 @@
 import express from "express";
 import {OrderBook} from "./orderbook";
-import type {Order} from "./types";
+import type {Order,Users} from "./types";
 
 const app=express();
 app.use(express.json());
 
 const orderBook=new OrderBook();
+const users:Users[]=[
+    {id:1,name:"prince",balance:200000},
+    {id:2,name:"Rahul",balance:0}
+];
+
+function findUserById(userId:number):Users|undefined{
+    return users.find(user=>user.id === userId);
+}
+
 
 
 function isValidOrder(order: any): order is Order {
@@ -16,6 +25,9 @@ function isValidOrder(order: any): order is Order {
 
     return true;
 }
+app.get("/user",(req,res)=>{
+    res.json({users})
+})
 
 app.get("/",(req,res)=>{
     res.json({
@@ -25,6 +37,22 @@ app.get("/",(req,res)=>{
 // order api to put the data in orderbook
 app.post("/orders",(req,res)=>{
     const order=req.body;
+    const user = findUserById(order.userId);
+
+    if (!user) {
+        return res.status(404).json({
+            message: "User not found"
+        });
+    }
+    if(order.side==="buy" && user.balance<order.price*order.quantity){
+        return res.status(400).json({
+            message:"Insufficient balance"
+        })
+    }
+    if(order.side==="buy"){
+        const requiredBalance=order.price*order.quantity;
+        user.balance-=requiredBalance
+    }
     if (!isValidOrder(order)) {
         return res.status(400).json({
             success: false,
@@ -34,6 +62,13 @@ app.post("/orders",(req,res)=>{
     
     orderBook.addOrder(order);
     const fills=orderBook.matchOrders();
+    // updating seller balance
+    for(const fill of fills){
+        const seller=findUserById(fill.sellerId);
+        if(seller){
+            seller.balance+=fill.price*fill.quantity;
+        }
+    }
     res.json({
         success:true,
         message:"Order Processed",

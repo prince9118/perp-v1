@@ -58,6 +58,8 @@ export class OrderBook{
             bestBid.quantity-=tradeQty;
             bestAsk.quantity-=tradeQty;
             const fill={
+                buyerId:bestBid.userId,
+                sellerId:bestAsk.userId,
                 price:bestAsk.price,
                 quantity:tradeQty,
             }
