@@ -52,6 +52,10 @@ export class OrderBook{
         while(this.canMatch()){
             const bestBid=this.getBestBid()!;
             const bestAsk=this.getBestAsk()!;
+            // prevernt from self-trade
+            if(bestBid.userId === bestAsk.userId){
+                break;
+            }
             
             // now lets do trade when i know that the trade can happen 
             const tradeQty=Math.min(bestBid.quantity,bestAsk.quantity);

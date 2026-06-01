@@ -8,7 +8,7 @@ app.use(express.json());
 const orderBook=new OrderBook();
 const users:Users[]=[
     {id:1,name:"prince",balance:200000},
-    {id:2,name:"Rahul",balance:0}
+    {id:2,name:"Rahul",balance:200000}
 ];
 
 function findUserById(userId:number):Users|undefined{
@@ -25,7 +25,7 @@ function isValidOrder(order: any): order is Order {
 
     return true;
 }
-app.get("/user",(req,res)=>{
+app.get("/users",(req,res)=>{
     res.json({users})
 })
 
