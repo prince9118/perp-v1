@@ -90,4 +90,13 @@ export class OrderBook{
         this.buyOrder=this.buyOrder.filter(order=>order.id !== orderId);
         return order;
     }
+    updateOrderStatus(order: Order) {
+        if (order.quantity === 0) {
+            order.status = "filled";
+        } else if (order.quantity < order.originalQuantity) {
+            order.status = "partial";
+        } else {
+            order.status = "open";
+        }
+    }
 }

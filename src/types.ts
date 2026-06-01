@@ -6,7 +6,8 @@ export interface Order{
     userId:number;
     side:Side;
     price:number;
-    quantity:number;
+    quantity:number;// remaining quantity
+    originalQuantity:number;// initial quantity
     status:OrderStatus;
 }
 export interface Fill{

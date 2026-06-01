@@ -14,8 +14,16 @@ const users:Users[]=[
 function findUserById(userId:number):Users|undefined{
     return users.find(user=>user.id === userId);
 }
-
-
+// helper funcionn for the update Status 
+function updateOrderStatus(order:Order){
+    if(order.quantity===0){
+        order.status="filled";
+    }else if(order.quantity<order.originalQuantity){
+        order.status="partial";
+    }else{
+        order.status="open";
+    }
+}
 
 function isValidOrder(order: any): order is Order {
     if (typeof order.id !== "number") return false;
@@ -38,6 +46,7 @@ app.get("/",(req,res)=>{
 app.post("/orders",(req,res)=>{
     const order:Order={
         ...req.body,
+        orignalQuantity:req.body.quantity,
         status:"open"};
     const user = findUserById(order.userId);
 
