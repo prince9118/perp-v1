@@ -36,7 +36,9 @@ app.get("/",(req,res)=>{
 })
 // order api to put the data in orderbook
 app.post("/orders",(req,res)=>{
-    const order=req.body;
+    const order:Order={
+        ...req.body,
+        status:"open"};
     const user = findUserById(order.userId);
 
     if (!user) {

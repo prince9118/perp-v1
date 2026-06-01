@@ -1,4 +1,5 @@
 export type Side="buy"|"sell";
+export type OrderStatus= "open"|"partial"|"filled"|"cancelled";
 
 export interface Order{
     id:number;
