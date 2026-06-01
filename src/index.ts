@@ -7,8 +7,8 @@ app.use(express.json());
 
 const orderBook=new OrderBook();
 const users:Users[]=[
-    {id:1,name:"prince",balance:200000},
-    {id:2,name:"Rahul",balance:200000}
+    {id:1,name:"prince",balance:200000,lockedBalance:0},
+    {id:2,name:"Rahul",balance:200000,lockedBalance:0}
 ];
 
 function findUserById(userId:number):Users|undefined{
@@ -51,7 +51,8 @@ app.post("/orders",(req,res)=>{
     }
     if(order.side==="buy"){
         const requiredBalance=order.price*order.quantity;
-        user.balance-=requiredBalance
+        user.balance -= requiredBalance;
+        user.lockedBalance += requiredBalance;
     }
     if (!isValidOrder(order)) {
         return res.status(400).json({
@@ -76,6 +77,29 @@ app.post("/orders",(req,res)=>{
         orderbook:orderBook
     });
 });
+app.delete("/orders/:id",(req,res)=>{
+    const orderId=Number(req.params.id);
+    const cancelledorder=orderBook.cancelOrder(orderId);
+    if(!cancelledorder){
+        return res.status(404).json({
+            success:false,
+            message:"Order not Found"
+        });
+    }
+    const user=findUserById(cancelledorder.userId);
+    if(user && cancelledorder.side === "buy"){
+        const refund=cancelledorder.price*cancelledorder.quantity;
+        user.lockedBalance-=refund;
+        user.balance+=refund;
+    }
+    res.json({
+        success:true,
+        message:"order cancelled",
+        cancelledorder,
+        users,
+    })
+})
+
 
 //can-match api to match the data in the orderbook
 app.get("/can-match",(req,res)=>{

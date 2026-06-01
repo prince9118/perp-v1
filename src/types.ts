@@ -6,6 +6,7 @@ export interface Order{
     side:Side;
     price:number;
     quantity:number;
+    status:OrderStatus;
 }
 export interface Fill{
     buyerId:number;
@@ -17,4 +18,5 @@ export interface Users{
     id:number;
     name:string;
     balance:number;
+    lockedBalance:number;
 }

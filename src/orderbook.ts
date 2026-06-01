@@ -82,4 +82,12 @@ export class OrderBook{
         
         return currentfills;
     }
+    cancelOrder(orderId:number):Order|null{
+        const order=this.buyOrder.find(order=>order.id===orderId);
+        if(!order){
+            return null;
+        }
+        this.buyOrder=this.buyOrder.filter(order=>order.id !== orderId);
+        return order;
+    }
 }
