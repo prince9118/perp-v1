@@ -79,6 +79,16 @@ app.post("/orders", (req, res) => {
         user.lockedBalance += requiredBalance;
     }
 
+    // check for market
+    if(order.type==="market" && order.side==="buy"){
+        const estimatedCost=orderBook.estimateMarketBuyCost(order.quantity);
+        if(user.balance<estimatedCost){
+            return res.status(400).json({
+                message:"Insufficient balance for maket buy"
+            });
+        }
+    }
+
     // LIMIT order goes into orderbook
     if (order.type === "limit") {
         orderBook.addOrder(order);
@@ -89,16 +99,25 @@ app.post("/orders", (req, res) => {
         orderBook.addOrder(order);
         fills = orderBook.matchOrders();
     }
+
     if(order.type==="market"){
         fills = orderBook.executeMarketOrder(order);
     }
 
 
     for (const fill of fills) {
+        const buyer=findUserById(fill.buyerId);
         const seller = findUserById(fill.sellerId);
+        const amount=fill.price*fill.quantity;
 
         if (seller) {
-            seller.balance += fill.price * fill.quantity;
+            seller.balance += amount;
+        }
+        if(buyer &&  order.type==="market" && order.side==="buy"){
+            buyer.balance-=amount;
+        }
+        if(buyer && order.type==="limit" && order.side==="buy"){
+            buyer.lockedBalance-= amount;
         }
     }
 

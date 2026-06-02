@@ -188,4 +188,20 @@ export class OrderBook{
         return currentfills;
     }
     
+    estimateMarketBuyCost(quantity:number):number{
+        let remainingQty=quantity;
+        let totalCost=0;
+        const sortedAsks=[...this.sellOrder].sort((a,b)=>a.price-b.price);
+
+        for(const ask of sortedAsks){
+            if(remainingQty === 0){
+                break;
+            }
+            const tradeQty=Math.min(remainingQty,ask.quantity);
+            totalCost+=tradeQty*ask.price;
+            remainingQty-=tradeQty;
+        }
+        return totalCost;
+    }    
+    
 }
