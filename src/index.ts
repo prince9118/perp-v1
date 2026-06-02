@@ -43,11 +43,13 @@ app.get("/",(req,res)=>{
     });
 })
 // order api to put the data in orderbook
-app.post("/orders",(req,res)=>{
-    const order:Order={
+app.post("/orders", (req, res) => {
+    const order: Order = {
         ...req.body,
-        orignalQuantity:req.body.quantity,
-        status:"open"};
+        originalQuantity: req.body.quantity,
+        status: "open"
+    };
+
     const user = findUserById(order.userId);
 
     if (!user) {
@@ -55,61 +57,83 @@ app.post("/orders",(req,res)=>{
             message: "User not found"
         });
     }
-    if(order.side==="buy" && user.balance<order.price*order.quantity){
-        return res.status(400).json({
-            message:"Insufficient balance"
-        })
-    }
-    if(order.side==="buy"){
-        const requiredBalance=order.price*order.quantity;
-        user.balance -= requiredBalance;
-        user.lockedBalance += requiredBalance;
-    }
+
     if (!isValidOrder(order)) {
         return res.status(400).json({
             success: false,
             message: "Invalid order"
         });
     }
-    
-    orderBook.addOrder(order);
-    const fills=orderBook.matchOrders();
-    // updating seller balance
-    for(const fill of fills){
-        const seller=findUserById(fill.sellerId);
-        if(seller){
-            seller.balance+=fill.price*fill.quantity;
+
+    // LIMIT BUY order balance check
+    if (order.type === "limit" && order.side === "buy") {
+        const requiredBalance = order.price * order.quantity;
+
+        if (user.balance < requiredBalance) {
+            return res.status(400).json({
+                message: "Insufficient balance"
+            });
         }
+
+        user.balance -= requiredBalance;
+        user.lockedBalance += requiredBalance;
     }
-    res.json({
-        success:true,
-        message:"Order Processed",
-        fills,
-        orderbook:orderBook
-    });
-});
-app.delete("/orders/:id",(req,res)=>{
-    const orderId=Number(req.params.id);
-    const cancelledorder=orderBook.cancelOrder(orderId);
-    if(!cancelledorder){
-        return res.status(404).json({
-            success:false,
-            message:"Order not Found"
+
+    // LIMIT order goes into orderbook
+    if (order.type === "limit") {
+        orderBook.addOrder(order);
+    }
+
+    // MARKET order later execute directly
+    if (order.type === "market") {
+        return res.status(400).json({
+            message: "Market order not implemented yet"
         });
     }
-    const user=findUserById(cancelledorder.userId);
-    if(user && cancelledorder.side === "buy"){
-        const refund=cancelledorder.price*cancelledorder.quantity;
-        user.lockedBalance-=refund;
-        user.balance+=refund;
+
+    const fills = orderBook.matchOrders();
+
+    for (const fill of fills) {
+        const seller = findUserById(fill.sellerId);
+
+        if (seller) {
+            seller.balance += fill.price * fill.quantity;
+        }
     }
+
     res.json({
-        success:true,
-        message:"order cancelled",
+        success: true,
+        message: "Order Processed",
+        fills,
+        orderbook: orderBook
+    });
+});
+app.delete("/orders/:id", (req, res) => {
+    const orderId = Number(req.params.id);
+    const cancelledorder = orderBook.cancelOrder(orderId);
+
+    if (!cancelledorder) {
+        return res.status(404).json({
+            success: false,
+            message: "Order not Found"
+        });
+    }
+
+    const user = findUserById(cancelledorder.userId);
+
+    if (user && cancelledorder.side === "buy") {
+        const refund = cancelledorder.price * cancelledorder.quantity;
+        user.lockedBalance -= refund;
+        user.balance += refund;
+    }
+
+    res.json({
+        success: true,
+        message: "order cancelled",
         cancelledorder,
         users,
-    })
-})
+    });
+});
 
 
 //can-match api to match the data in the orderbook
@@ -123,9 +147,16 @@ app.get("/can-match",(req,res)=>{
 app.get("/orderbook",(req,res)=>{
     res.json(orderBook);
 })
+// all the fills that are going on
 app.get("/fills", (req, res) => {
     res.json({
         fills: orderBook.fills
+    });
+});
+// completed orders
+app.get("/completed-orders",(req,res)=>{
+    res.json({
+        completedOrder:orderBook.completedOrders
     });
 });
 

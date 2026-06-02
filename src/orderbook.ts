@@ -1,19 +1,20 @@
-import type {Order,Fill} from "./types";
+import type {Order,Fill, LimitOrder} from "./types";
 
 
 export class OrderBook{
-    buyOrder:Order[]=[];
-    sellOrder:Order[]=[];
+    buyOrder:LimitOrder[]=[];
+    sellOrder:LimitOrder[]=[];
     fills: Fill[] = [];
+    completedOrders: Order[] = [];
 
-    addOrder(order:Order){
+    addOrder(order:LimitOrder){
         if(order.side === "buy"){
             this.buyOrder.push(order);
         }else{
             this.sellOrder.push(order);
         }
     }
-    getBestBid():Order|undefined{
+    getBestBid():LimitOrder|undefined{
         if(this.buyOrder.length===0){
             return undefined;
         }
@@ -25,7 +26,7 @@ export class OrderBook{
         }
         return bestBid;
     }
-    getBestAsk():Order|undefined{
+    getBestAsk():LimitOrder|undefined{
         if(this.sellOrder.length === 0){
             return undefined;
         }
@@ -61,6 +62,17 @@ export class OrderBook{
             const tradeQty=Math.min(bestBid.quantity,bestAsk.quantity);
             bestBid.quantity-=tradeQty;
             bestAsk.quantity-=tradeQty;
+
+            this.updateOrderStatus(bestAsk);
+            this.updateOrderStatus(bestBid);
+            // storing the completed order
+            if(bestBid.status ==="filled"){
+                this.completedOrders.push(bestBid);
+            }
+            if(bestAsk.status==="filled"){
+                this.completedOrders.push(bestAsk);
+            }
+
             const fill={
                 buyerId:bestBid.userId,
                 sellerId:bestAsk.userId,
@@ -76,18 +88,27 @@ export class OrderBook{
             this.sellOrder=this.sellOrder.filter(
                 order=>order.quantity>0
             );
-           
 
         }
         
         return currentfills;
     }
-    cancelOrder(orderId:number):Order|null{
-        const order=this.buyOrder.find(order=>order.id===orderId);
+    cancelOrder(orderId:number):LimitOrder|null{
+        let  order=this.buyOrder.find(order=>order.id===orderId);
         if(!order){
+            order=this.sellOrder.find(order=>order.id===orderId);                                          
+        }
+        if(!order){
+            return null;                                          
+        }
+        // if already filled or cancelled then return null
+        if(order.status === "filled"||order.status==="cancelled"){
             return null;
         }
+        order.status="cancelled";
+        
         this.buyOrder=this.buyOrder.filter(order=>order.id !== orderId);
+        this.sellOrder=this.sellOrder.filter(order=>order.id !== orderId);
         return order;
     }
     updateOrderStatus(order: Order) {
