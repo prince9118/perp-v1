@@ -157,5 +157,35 @@ export class OrderBook{
         return currentfills;
 
     }
+
+    //market sell
+    executeMarketSell(order:MarketOrder):Fill[]{
+        const currentfills:Fill[]=[];
+        while(order.quantity>0  && this.buyOrder.length>0){
+            const bestBid=this.getBestBid()!;
+            if(bestBid.userId===order.userId){
+                break;
+            }
+            const tradeQty=Math.min(order.quantity,bestBid.quantity);
+            order.quantity-=tradeQty;
+            bestBid.quantity-=tradeQty;
+            
+            this.updateOrderStatus(order);
+            this.updateOrderStatus(bestBid);
+            const fill:Fill={
+                buyerId:bestBid.userId,
+                sellerId:order.userId,
+                price:bestBid.price,
+                quantity:tradeQty
+            }
+            currentfills.push(fill);
+            this.fills.push(fill);
+            if(bestBid.status === "filled"){
+                this.completedOrders.push(bestBid);
+            }
+            this.buyOrder=this.buyOrder.filter(order=>order.quantity>0);
+        }
+        return currentfills;
+    }
     
 }

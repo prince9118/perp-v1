@@ -1,6 +1,6 @@
 import express from "express";
 import {OrderBook} from "./orderbook";
-import type {Order,Users} from "./types";
+import type {Order,Users,Fill} from "./types";
 
 const app=express();
 app.use(express.json());
@@ -83,15 +83,16 @@ app.post("/orders", (req, res) => {
     if (order.type === "limit") {
         orderBook.addOrder(order);
     }
-
-    // MARKET order later execute directly
-    if (order.type === "market") {
-        return res.status(400).json({
-            message: "Market order not implemented yet"
-        });
+    
+    let fills:Fill[]=[];
+    if(order.type==="limit"){
+        orderBook.addOrder(order);
+        fills = orderBook.matchOrders();
+    }
+    if(order.type==="market"){
+        fills = orderBook.executeMarketOrder(order);
     }
 
-    const fills = orderBook.matchOrders();
 
     for (const fill of fills) {
         const seller = findUserById(fill.sellerId);
