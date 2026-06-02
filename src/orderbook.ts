@@ -1,4 +1,4 @@
-import type {Order,Fill, LimitOrder} from "./types";
+import type {Order,Fill, LimitOrder, MarketOrder} from "./types";
 
 
 export class OrderBook{
@@ -120,4 +120,42 @@ export class OrderBook{
             order.status = "open";
         }
     }
+    executeMarketOrder(order:Order):Fill[]{
+        if(order.side==="buy"){
+            return this.executeMarketOrder(order);
+        }else{
+            return this.executeMarketOrder(order);
+        }
+    }
+    // market buy
+    // market buy consumes from sellOrder
+
+    executeMarketBuy(order:MarketOrder):Fill[]{
+        const currentfills:Fill[]=[];
+        while(order.quantity>0 && this.sellOrder.length>0){
+            const bestAsk=this.getBestAsk()!;
+            if(bestAsk.userId===order.userId){
+                break;
+            }
+            const tradeQty=Math.min(order.quantity,bestAsk.quantity);
+            order.quantity-=tradeQty;
+            bestAsk.quantity-=tradeQty;
+            this.updateOrderStatus(order);
+            this.updateOrderStatus(bestAsk);
+            const fill:Fill={
+               buyerId:order.userId,
+               sellerId:bestAsk.userId,
+               price:bestAsk.price,
+               quantity:tradeQty
+            }
+            this.fills.push(fill);
+            if(bestAsk.status==="filled"){
+                this.completedOrders.push(bestAsk);
+            }
+            this.sellOrder=this.sellOrder.filter(order=>order.quantity>0)
+        }
+        return currentfills;
+
+    }
+    
 }
