@@ -211,6 +211,18 @@ export class OrderBook{
         }
         return totalCost;
     }  
+    // reject orders when liquidity is not enough
+    // Do- or -  reject model 
+    // check sell  liquidity 
+
+    hasEnoughSellLiquidity(quantity:number):boolean{
+        const totalSellQty=this.sellOrder.reduce(
+            (total,order)=>total+order.quantity,
+            0
+        )
+    }
+   
+
     
     
     

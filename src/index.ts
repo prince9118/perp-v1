@@ -209,7 +209,12 @@ app.get("/orders/:userId",(req,res)=>{
         orders
     });
 });
-
+let  abc=[2,2,3,4,45,5,5,5];
+const total=abc.reduce(
+    (total,num)=>total+num,
+    0
+);
+console.log(total);
 app.listen(3000,()=>{
     console.log("Backend is running on port 3000");
 })
