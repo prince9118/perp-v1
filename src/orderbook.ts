@@ -6,8 +6,10 @@ export class OrderBook{
     sellOrder:LimitOrder[]=[];
     fills: Fill[] = [];
     completedOrders: Order[] = [];
+    allOrders:Order[]=[];
 
     addOrder(order:LimitOrder){
+        this.allOrders.push(order);
         if(order.side === "buy"){
             this.buyOrder.push(order);
         }else{
@@ -76,6 +78,8 @@ export class OrderBook{
             const fill={
                 buyerId:bestBid.userId,
                 sellerId:bestAsk.userId,
+                buyOrderId:bestBid.id,
+                sellOrderId:bestAsk.id,
                 price:bestAsk.price,
                 quantity:tradeQty,
             }
@@ -145,6 +149,8 @@ export class OrderBook{
             const fill:Fill={
                buyerId:order.userId,
                sellerId:bestAsk.userId,
+               buyOrderId:order.id,
+               sellOrderId:bestAsk.id,
                price:bestAsk.price,
                quantity:tradeQty
             }
@@ -175,6 +181,8 @@ export class OrderBook{
             const fill:Fill={
                 buyerId:bestBid.userId,
                 sellerId:order.userId,
+                buyOrderId:bestBid.id,
+                sellOrderId:order.id,
                 price:bestBid.price,
                 quantity:tradeQty
             }
@@ -202,6 +210,8 @@ export class OrderBook{
             remainingQty-=tradeQty;
         }
         return totalCost;
-    }    
+    }  
+    
+    
     
 }

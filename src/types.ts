@@ -23,9 +23,14 @@ export interface MarketOrder extends BaseOrder{
 
 export type Order = LimitOrder | MarketOrder;
 
+// Fill=== which buyer, which seller, which buy order, which sell order, price, quantity.
 export interface Fill{
     buyerId:number;
     sellerId:number;
+
+    buyOrderId:number,
+    sellOrderId:number,
+
     price:number;
     quantity:number;
 }

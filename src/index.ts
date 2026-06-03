@@ -101,6 +101,7 @@ app.post("/orders", (req, res) => {
     }
 
     if(order.type==="market"){
+        orderBook.allOrders.push(order);
         fills = orderBook.executeMarketOrder(order);
     }
 
@@ -177,6 +178,25 @@ app.get("/fills", (req, res) => {
 app.get("/completed-orders",(req,res)=>{
     res.json({
         completedOrder:orderBook.completedOrders
+    });
+});
+
+// endpoint to see the all orders
+app.get("/orders",(req,res)=>{
+    res.json({
+        orders:orderBook.allOrders
+    });
+});
+
+// endpoint to see User-specific orders
+
+app.get("/orders/:userId",(req,res)=>{
+    const userId=Number(req.params.userId);
+    const orders=orderBook.allOrders.filter(
+        order=>order.userId===userId
+    )
+    res.json({
+        orders
     });
 });
 
