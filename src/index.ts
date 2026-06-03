@@ -90,9 +90,6 @@ app.post("/orders", (req, res) => {
     }
 
     // LIMIT order goes into orderbook
-    if (order.type === "limit") {
-        orderBook.addOrder(order);
-    }
     
     let fills:Fill[]=[];
     if(order.type==="limit"){
@@ -168,12 +165,25 @@ app.get("/can-match",(req,res)=>{
 app.get("/orderbook",(req,res)=>{
     res.json(orderBook);
 })
-// all the fills that are going on
+// all the fills that are going  on (Trade history)
 app.get("/fills", (req, res) => {
     res.json({
         fills: orderBook.fills
     });
 });
+
+// fills by the User-specific
+app.get("/fills/:userId",(req,res)=>{
+  const userId=Number(req.params.userId);
+  const fills=orderBook.fills.filter(fill=>
+    fill.buyerId === userId || fill.sellerId=== userId
+  );
+  res.json({
+    userId,
+    fills
+  });
+});
+
 // completed orders
 app.get("/completed-orders",(req,res)=>{
     res.json({
