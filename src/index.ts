@@ -4,6 +4,7 @@ import type {Order,Users,Fill} from "./types";
 
 const app=express();
 app.use(express.json());
+const port=process.env.PORT;
 
 const orderBook=new OrderBook();
 const users:Users[]=[
@@ -64,6 +65,7 @@ app.post("/orders", (req, res) => {
             message: "Invalid order"
         });
     }
+    
 
     // LIMIT BUY order balance check
     if (order.type === "limit" && order.side === "buy") {
@@ -77,6 +79,22 @@ app.post("/orders", (req, res) => {
 
         user.balance -= requiredBalance;
         user.lockedBalance += requiredBalance;
+    }
+    /// checking liquidity(enoght order in order book to buy or sell)
+    if(order.type === "market" && order.side=== "buy"){
+        if(!orderBook.hasEnoughSellLiquidity(order.quantity)){
+            return res.status(400).json({
+                message:"Not enough sell liquidity"
+            });
+        }
+    }    
+
+    if(order.type ==="market" && order.side ==="sell"){
+        if(!orderBook.hasEnoughBuyLiquidity(order.quantity)){
+            return res.status(400).json({
+                message:"Not enough buy liquidity"
+           });
+        }
     }
 
     // check for market
@@ -209,12 +227,7 @@ app.get("/orders/:userId",(req,res)=>{
         orders
     });
 });
-let  abc=[2,2,3,4,45,5,5,5];
-const total=abc.reduce(
-    (total,num)=>total+num,
-    0
-);
-console.log(total);
-app.listen(3000,()=>{
-    console.log("Backend is running on port 3000");
+
+app.listen(port,()=>{
+    console.log(`Backend is Runnig on Port ${port}`);
 })

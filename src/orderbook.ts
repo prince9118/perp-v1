@@ -220,8 +220,16 @@ export class OrderBook{
             (total,order)=>total+order.quantity,
             0
         )
+        return totalSellQty>=quantity;
     }
-   
+    
+    hasEnoughBuyLiquidity(quantity:number):boolean{
+        const totalBuyQty=this.buyOrder.reduce(
+            (total,order)=>total+total*quantity,
+            0
+        )
+        return totalBuyQty>=quantity;
+    }
 
     
     
